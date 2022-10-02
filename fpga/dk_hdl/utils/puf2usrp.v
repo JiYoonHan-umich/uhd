@@ -1,0 +1,152 @@
+module  puf2usrp#(
+  parameter DATA_WIDTH    = 16
+)(
+  input clk,
+  input reset,
+
+  /* IQ input */
+  input  in_tvalid,
+  input  in_tlast, 
+  output in_tready,
+  input [2*DATA_WIDTH-1:0]  in_tdata,
+
+  /*output tdata*/
+  output  out_tlast,
+  output  out_tvalid,
+  input   out_tready,
+  output  [2*DATA_WIDTH-1:0]  out_tdata
+);
+
+
+  reg [2:0] state;
+  reg [2*DATA_WIDTH-1:0] in0_tdata, in1_tdata;
+  reg [DATA_WIDTH-1:0] scale0_tdata, scale1_tdata;
+  reg  o_tvalid;
+  wire lin_tready, lin_tlast, lin_tvalid;
+
+  localparam SZERO  = 3'b000;
+  localparam SONE   = 3'b001;
+  localparam STWO   = 3'b010;
+  localparam STHREE = 3'b011;
+  localparam SFOUR  = 3'b100;
+  localparam SFIVE  = 3'b101;
+
+  localparam DROP_TOP_P = 6;
+  localparam NUM_STAGES = 5;
+
+  lin1D #(
+  .DATA_WIDTH(DATA_WIDTH), .DROP_TOP_P(DROP_TOP_P)) 
+    LI(
+      .clk(clk),
+      .reset(reset),
+
+      .in_tvalid(in_tvalid | o_tvalid), .in_tready(in_tready), .in_tlast(in_tlast),
+
+      .scale0_tdata(scale0_tdata), .scale1_tdata(scale1_tdata),
+      .in0_tdata(in0_tdata), .in1_tdata(in1_tdata),
+
+      .out_tvalid(lin_tvalid), .out_tlast(lin_tlast), .out_tready(lin_tready),
+      .out_tdata(out_tdata));
+
+/*
+  reg [2*DATA_WIDTH-1:0] data_160[0:NUM_STAGES-1];
+  integer n;
+  initial begin
+    for (n = 0; n < NUM_STAGES; n = n + 1) begin
+      data_160[n] <= 0;
+    end
+  end
+
+  reg [$clog2(NUM_STAGES)-1:0] naddr;
+  always @(posedge clk ) begin
+    if (reset) begin
+      naddr <= 4;
+    end
+    else begin
+      if (in_tvalid && naddr < 4) begin
+        naddr <= naddr + 1;
+        data_160[naddr] <= in_tdata;
+      end
+      else begin
+        naddr <= 0; 
+        data_160[4] <= data_160[3];
+      end 
+    end
+    
+  end
+*/
+  always @(posedge clk ) begin
+    if (reset) begin
+        in0_tdata    <= 0;
+        in1_tdata    <= 0;
+        scale0_tdata <= 0;
+        scale1_tdata <= 0;
+        state        <= SZERO;
+        o_tvalid     <= 1'b0;
+    end
+    else begin
+      o_tvalid <= 1'b1;
+        case (state)
+          SZERO: begin
+            in0_tdata    <= in1_tdata;
+            in1_tdata    <= in_tdata;
+            scale0_tdata <= 26214;
+            scale1_tdata <= 6553;
+            if (~in_tvalid) begin
+              state        <= SONE;
+            end
+          end
+          SONE: begin
+            scale0_tdata <= 0;
+            scale1_tdata <= 32767;
+            if (in_tvalid) begin
+              state      <= STWO;
+            end
+          end
+          STWO: begin
+            in0_tdata    <= in1_tdata;
+            in1_tdata    <= in_tdata;
+            scale0_tdata <= 6553;
+            scale1_tdata <= 26214;
+            if (in_tvalid) begin
+              state  <= STHREE;
+            end
+            else begin
+              state  <= SONE;   
+            end 
+          end
+          STHREE: begin
+            in0_tdata    <= in1_tdata;
+            in1_tdata    <= in_tdata;
+            scale0_tdata <= 19660;
+            scale1_tdata <= 13107;
+            if (in_tvalid) begin
+              state  <= SFOUR;
+            end
+            else begin
+              state  <= SONE;   
+            end 
+          end
+          SFOUR: begin
+            in0_tdata    <= in1_tdata;
+            in1_tdata    <= in0_tdata;
+            scale0_tdata <= 13107;
+            scale1_tdata <= 19660;
+            if (in_tvalid) begin
+              state  <= SZERO;
+            end
+            else begin
+              state  <= SONE;   
+            end 
+          end 
+          default: state <= SZERO;
+        endcase
+    end  
+  
+  end
+
+  assign out_tvalid = o_tvalid & lin_tvalid;
+  assign out_tlast  = lin_tlast;
+  assign lin_tready = out_tready;
+
+endmodule

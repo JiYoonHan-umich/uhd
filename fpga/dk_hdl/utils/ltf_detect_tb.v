@@ -76,7 +76,7 @@ ltf_detect #(
 
 
 initial begin
-  $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/ltf_detect_tv_03.mem", input_memory);
+  $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/ltf_detect_tv_0x.mem", input_memory);
 end
 
 reg stop_write;
@@ -96,7 +96,7 @@ end
 
 integer file_id;
 initial begin
-  file_id = $fopen("/home/user/Desktop/data/sim/ltf_detect_03.txt", "wb");
+  file_id = $fopen("/home/user/Desktop/data/sim/ltf_detect_0x.txt", "wb");
   $display("Opened file ..................");
   @(negedge reset);
   //@(negedge stop_write);

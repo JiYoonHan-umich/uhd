@@ -72,7 +72,7 @@ module freq_shift_iq_tb();
 
     reg stop_write;
     initial begin
-    $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/utils/test_vec.mem", input_memory);
+    $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/test_vec.mem", input_memory);
     end
 
     initial begin
@@ -87,7 +87,7 @@ module freq_shift_iq_tb();
     end
 integer file_id;
 initial begin
-    file_id = $fopen("/home/user/Desktop/sim/fshift_mix.txt", "wb");
+    file_id = $fopen("/home/user/Desktop/data/sim/fshift_mix.txt", "wb");
     $display("Opened file ..................");
     @(negedge reset);
     $display("start writing ................");
