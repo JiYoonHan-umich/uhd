@@ -40,7 +40,7 @@ always @(posedge clk) begin
 end
 
 usrp2puf #(.DATA_WIDTH(DATA_WIDTH)) 
-    CMUL_DUT(
+    U2P_DUT(
       .clk(clk),
       .reset(reset),
 
