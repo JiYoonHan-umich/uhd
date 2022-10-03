@@ -32,7 +32,6 @@ module  puf2usrp#(
   localparam SFIVE  = 3'b101;
 
   localparam DROP_TOP_P = 6;
-  localparam NUM_STAGES = 5;
 
   lin1D #(
   .DATA_WIDTH(DATA_WIDTH), .DROP_TOP_P(DROP_TOP_P)) 
@@ -48,33 +47,6 @@ module  puf2usrp#(
       .out_tvalid(lin_tvalid), .out_tlast(lin_tlast), .out_tready(lin_tready),
       .out_tdata(out_tdata));
 
-/*
-  reg [2*DATA_WIDTH-1:0] data_160[0:NUM_STAGES-1];
-  integer n;
-  initial begin
-    for (n = 0; n < NUM_STAGES; n = n + 1) begin
-      data_160[n] <= 0;
-    end
-  end
-
-  reg [$clog2(NUM_STAGES)-1:0] naddr;
-  always @(posedge clk ) begin
-    if (reset) begin
-      naddr <= 4;
-    end
-    else begin
-      if (in_tvalid && naddr < 4) begin
-        naddr <= naddr + 1;
-        data_160[naddr] <= in_tdata;
-      end
-      else begin
-        naddr <= 0; 
-        data_160[4] <= data_160[3];
-      end 
-    end
-    
-  end
-*/
   always @(posedge clk ) begin
     if (reset) begin
         in0_tdata    <= 0;
@@ -88,17 +60,17 @@ module  puf2usrp#(
       o_tvalid <= 1'b1;
         case (state)
           SZERO: begin
-            in0_tdata    <= in1_tdata;
-            in1_tdata    <= in_tdata;
-            scale0_tdata <= 26214;
-            scale1_tdata <= 6553;
+            scale0_tdata <= 0;
+            scale1_tdata <= 32767;
             if (~in_tvalid) begin
               state        <= SONE;
             end
           end
           SONE: begin
-            scale0_tdata <= 0;
-            scale1_tdata <= 32767;
+            in0_tdata    <= in1_tdata;
+            in1_tdata    <= in_tdata;
+            scale0_tdata <= 6553;
+            scale1_tdata <= 26214;
             if (in_tvalid) begin
               state      <= STWO;
             end
@@ -106,8 +78,8 @@ module  puf2usrp#(
           STWO: begin
             in0_tdata    <= in1_tdata;
             in1_tdata    <= in_tdata;
-            scale0_tdata <= 6553;
-            scale1_tdata <= 26214;
+            scale0_tdata <= 13107;
+            scale1_tdata <= 19660;
             if (in_tvalid) begin
               state  <= STHREE;
             end
@@ -129,9 +101,9 @@ module  puf2usrp#(
           end
           SFOUR: begin
             in0_tdata    <= in1_tdata;
-            in1_tdata    <= in0_tdata;
-            scale0_tdata <= 13107;
-            scale1_tdata <= 19660;
+            in1_tdata    <= in_tdata;
+            scale0_tdata <= 26214;
+            scale1_tdata <= 6553;
             if (in_tvalid) begin
               state  <= SZERO;
             end

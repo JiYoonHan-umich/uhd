@@ -60,7 +60,7 @@ puf2usrp #(.DATA_WIDTH(DATA_WIDTH))
 
 initial begin
   $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/puf2usrp_dat_tv.mem", input_memory);
-  $readmemb("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/puf2usrp_val_tv.mem", input_memory);
+  $readmemb("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/puf2usrp_val_tv.mem", val_memory);
 end
 reg stop_write;
 
