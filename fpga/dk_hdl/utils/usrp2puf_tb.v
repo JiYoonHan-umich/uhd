@@ -1,7 +1,7 @@
 module usrp2puf_tb ();
 
 localparam DATA_WIDTH    = 16;
-localparam NDATA         = 4096;
+localparam NDATA         = 16384;
 
 reg reset;
 wire clk;
