@@ -9,23 +9,23 @@ module  lin1D#(
   input  in_tvalid,
   input  in_tlast, 
   output in_tready,
-  input [DATA_WIDTH-1:0]  scale0_tdata,
-  input [DATA_WIDTH-1:0]  scale1_tdata,
-  input [2*DATA_WIDTH-1:0]  in0_tdata,
-  input [2*DATA_WIDTH-1:0]  in1_tdata,
+  input signed [DATA_WIDTH-1:0]  scale0_tdata,
+  input signed [DATA_WIDTH-1:0]  scale1_tdata,
+  input signed [2*DATA_WIDTH-1:0]  in0_tdata,
+  input signed [2*DATA_WIDTH-1:0]  in1_tdata,
 
   /*output tdata*/
   output  out_tlast,
   output  out_tvalid,
   input   out_tready,
-  output  [2*DATA_WIDTH-1:0]  out_tdata
+  output signed [2*DATA_WIDTH-1:0]  out_tdata
 );
 
 
-  wire [2*DATA_WIDTH-1:0] out0_scaled, out1_scaled, a2c_tdata;
+  wire signed [2*DATA_WIDTH-1:0] out0_scaled, out1_scaled, a2c_tdata;
   wire scaled_tvalid, scaled_tlast, scaled_tready;
   reg o_tready, o_tlast, o_tvalid;
-  reg [2*DATA_WIDTH-1:0] o_tdata;
+  reg signed [2*DATA_WIDTH-1:0] o_tdata;
 
   assign out_tdata  = o_tdata;
   assign out_tvalid = o_tvalid;

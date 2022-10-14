@@ -8,19 +8,19 @@ module  usrp2puf#(
   input  in_tvalid,
   input  in_tlast, 
   output in_tready,
-  input [2*DATA_WIDTH-1:0]  in_tdata,
+  input signed [2*DATA_WIDTH-1:0]  in_tdata,
 
   /*output tdata*/
   output  out_tlast,
   output  out_tvalid,
   input   out_tready,
-  output  [2*DATA_WIDTH-1:0]  out_tdata
+  output  signed [2*DATA_WIDTH-1:0]  out_tdata
 );
 
 
   reg [2:0] state;
-  reg [2*DATA_WIDTH-1:0] in0_tdata, in1_tdata;
-  reg [DATA_WIDTH-1:0] scale0_tdata, scale1_tdata;
+  reg signed [2*DATA_WIDTH-1:0] in0_tdata, in1_tdata;
+  reg signed [DATA_WIDTH-1:0] scale0_tdata, scale1_tdata;
   reg  o_tvalid;
   wire lin_tready, lin_tlast, lin_tvalid;
 

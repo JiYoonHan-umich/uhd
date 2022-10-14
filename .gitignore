@@ -2,3 +2,4 @@ debian
 *~
 *swp
 *.pyc
+*vivado_pid*

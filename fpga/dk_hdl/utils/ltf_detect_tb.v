@@ -12,11 +12,11 @@ localparam PMAG_WIDTH   = PWIDTH + $clog2(MAX_LEN+1);
 reg reset;
 wire clk;
 wire in_tvalid, in_tready, in_tlast;
-wire out_tvalid, out_tready, out_tlast;
+wire out_tvalid, out_tready, out_tlast, out_tvalid2;
 assign in_tvalid = 1'b1;
 assign in_tlast  = 1'b0;
 assign out_tready = 1'b1;
-wire [DATA_WIDTH-1:0] in_itdata, in_qtdata, nrx_after_peak;
+wire signed [DATA_WIDTH-1:0] in_itdata, in_qtdata, nrx_after_peak, input_itdata, input_qtdata;
 wire   peak_stb, peak_thres;
 wire [DATA_WIDTH-1:0] zi, zq;
 wire [PWIDTH-1:0] ami, amq;
@@ -30,11 +30,11 @@ assign acorr_itdata = acorr_tdata[2*PMAG_WIDTH-1:PMAG_WIDTH];
 assign pow_qtdata = pow_tdata[DATA_WIDTH-1:0];
 assign pow_itdata = pow_tdata[2*DATA_WIDTH-1:DATA_WIDTH];
 
-reg [2*DATA_WIDTH-1:0] in_data;
-reg [2*DATA_WIDTH-1:0] input_memory [0:NDATA-1];
+reg signed [2*DATA_WIDTH-1:0] in_data;
+reg signed [2*DATA_WIDTH-1:0] input_memory [0:NDATA-1];
 
-assign in_itdata = in_data[2*DATA_WIDTH-1:DATA_WIDTH];
-assign in_qtdata = in_data[DATA_WIDTH-1:0];
+assign input_itdata = in_data[2*DATA_WIDTH-1:DATA_WIDTH];
+assign input_qtdata = in_data[DATA_WIDTH-1:0];
 
 reg [$clog2(NDATA)-1:0] ncount;
 
@@ -57,14 +57,37 @@ end
 
 reg [2*DATA_WIDTH-1:0] noise_thres;
 
+wire signed [2*DATA_WIDTH-1:0] out_data; 
+wire signed [DATA_WIDTH-1:0] out_itdata, out_qtdata;
+
+assign out_itdata = out_data[31:16]; 
+assign out_qtdata = out_data[15:0]; 
+
+// resampling 
+usrp2puf #(.DATA_WIDTH(DATA_WIDTH)) 
+    usrp2puf_inst (
+      .clk(clk),
+      .reset(reset),
+
+      .in_tvalid(in_tvalid), .in_tlast(in_tlast),
+      .in_tready(in_tready), .in_tdata(in_data),
+
+      .out_tvalid(out_tvalid), .out_tlast(out_tlast), 
+      .out_tready(out_tready), .out_tdata(out_data));
+
+// Here, change (16,15) -> (16,13) 
+assign in_itdata = ($signed(out_itdata[15:0]) >>> 2);
+assign in_qtdata = ($signed(out_qtdata[15:0]) >>> 2);
+
+
 ltf_detect #(
   .DATA_WIDTH(DATA_WIDTH), .PWIDTH(PWIDTH), .THRES_SEL(THRES_SEL),
   .PCLIP_BITS(PCLIP_BITS), .PMAG_WIDTH(PMAG_WIDTH), .MAX_LEN(MAX_LEN), .LEN(LEN))
-    DUT(
+    ltf_detect_tb (
       .clk(clk), .reset(reset), .clear(reset),
-      .in_tvalid(in_tvalid), .in_tlast(in_tlast), .in_tready(in_tready),
+      .in_tvalid(out_tvalid), .in_tlast(in_tlast), .in_tready(in_tready),
       .in_itdata(in_itdata), .in_qtdata(in_qtdata),
-      .out_tvalid(out_tvalid), .out_tlast(out_tlast), .out_tready(out_tready),
+      .out_tvalid(out_tvalid2), .out_tlast(out_tlast), .out_tready(out_tready),
       .peak_stb(peak_stb), .nrx_after_peak(nrx_after_peak), .pow(pow),
       .peak_thres(peak_thres),
       .zi(zi), .zq(zq),
@@ -76,7 +99,7 @@ ltf_detect #(
 
 
 initial begin
-  $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/ltf_detect_tv_0x.mem", input_memory);
+  $readmemh("/afs/eecs.umich.edu/spvlsi/users/hanjyoon/FORD_FPGA/verilog/test_vec/ltf_test_vec_200.mem", input_memory);
 end
 
 reg stop_write;
@@ -95,17 +118,19 @@ initial begin
 end
 
 integer file_id;
+
 initial begin
-  file_id = $fopen("/home/user/Desktop/data/sim/ltf_detect_0x.txt", "wb");
+  file_id = $fopen("/afs/eecs.umich.edu/spvlsi/users/hanjyoon/FORD_FPGA/matlab/key/usrp2puf.txt", "wb");
   $display("Opened file ..................");
   @(negedge reset);
   //@(negedge stop_write);
   $display("start writing ................");
   while (!stop_write) begin
     @(negedge clk); 
-    $fwrite(file_id, "%d %d %d %d %d %d %d %d %d\n", in_itdata, in_qtdata,
-            pow_tdata, acorr_tdata, pow_mag_tdata, acorr_mag_tdata, 
-            peak_thres, peak_stb, nrx_after_peak);    
+    $fwrite(file_id, "%d %d %d %d %d %d %d %d %d %d %d\n", 
+            input_itdata, input_qtdata, in_tvalid, // 3
+            out_itdata, out_qtdata, out_tvalid,    // 3
+            pow_mag_tdata, acorr_mag_tdata, peak_thres, peak_stb, nrx_after_peak);   // 5 
   end
   $fclose(file_id);
   $display("File closed ..................");

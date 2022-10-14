@@ -59,8 +59,8 @@ puf2usrp #(.DATA_WIDTH(DATA_WIDTH))
 
 
 initial begin
-  $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/puf2usrp_dat_tv.mem", input_memory);
-  $readmemb("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/puf2usrp_val_tv.mem", val_memory);
+  $readmemh("/hskdata/hanjyoon/demba_git_1003/uhd/dk_hdl/testvec/puf2usrp_dat_tv.mem", input_memory);
+  $readmemb("/hskdata/hanjyoon/demba_git_1003/uhd/dk_hdl/testvec/puf2usrp_val_tv.mem", val_memory);
 end
 reg stop_write;
 
@@ -77,7 +77,7 @@ end
 
 integer file_id;
 initial begin
-  file_id = $fopen("/home/user/Desktop/data/sim/puf2usrp.txt", "wb");
+  file_id = $fopen("/hskdata/hanjyoon/FORD_FPGA/matlab/key/puf2usrp.txt", "wb");
   $display("Opened file ..................");
   @(negedge reset);
   //@(negedge stop_write);

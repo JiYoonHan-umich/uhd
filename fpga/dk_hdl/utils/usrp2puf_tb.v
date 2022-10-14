@@ -1,15 +1,15 @@
 module usrp2puf_tb ();
 
 localparam DATA_WIDTH    = 16;
-localparam NDATA         = 4096;
+localparam NDATA         = 16384;
 
 reg reset;
 wire clk;
-wire [DATA_WIDTH-1:0] in_itdata, in_qtdata;
-wire [DATA_WIDTH-1:0] out_itdata, out_qtdata;
+wire signed [DATA_WIDTH-1:0] in_itdata, in_qtdata;
+wire signed [DATA_WIDTH-1:0] out_itdata, out_qtdata;
 
-reg [2*DATA_WIDTH-1:0] in_tdata;
-reg [2*DATA_WIDTH-1:0] input_memory [0:NDATA-1];
+reg signed [2*DATA_WIDTH-1:0] in_tdata;
+reg signed [2*DATA_WIDTH-1:0] input_memory [0:NDATA-1];
 
 assign in_itdata = in_tdata[2*DATA_WIDTH-1:DATA_WIDTH];
 assign in_qtdata = in_tdata[DATA_WIDTH-1:0];
@@ -52,7 +52,7 @@ usrp2puf #(.DATA_WIDTH(DATA_WIDTH))
 
 
 initial begin
-  $readmemh("/home/user/programs/usrp/uhd/fpga/dk_hdl/testvec/usrp2puf_tv.mem", input_memory);
+  $readmemh("/hskdata/hanjyoon/FORD_FPGA/verilog/test_vec/ltf_test_vec_200.mem", input_memory);
 end
 reg stop_write;
 
@@ -69,7 +69,7 @@ end
 
 integer file_id;
 initial begin
-  file_id = $fopen("/home/user/Desktop/data/sim/usrp2puf.txt", "wb");
+  file_id = $fopen("/hskdata/hanjyoon/FORD_FPGA/matlab/key/usrp2puf.txt", "wb");
   $display("Opened file ..................");
   @(negedge reset);
   //@(negedge stop_write);
